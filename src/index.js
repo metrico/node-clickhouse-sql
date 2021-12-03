@@ -354,6 +354,26 @@ class Raw extends SQLObject {
 class Query extends SQLObject {
 }
 
+class Parameter extends SQLObject {
+  constructor(name) {
+    super()
+    this.name = name;
+    this.value = null;
+  }
+  set(value) {
+    this.value = value;
+  }
+  get() {
+    return this.value;
+  }
+  toString() {
+    if (!this.value) {
+      throw new Error('Unspecified parameter ' + this.name);
+    }
+    return this.value.toString();
+  }
+}
+
 class With extends Query {
   constructor(alias, query, inline) {
     super();
@@ -397,6 +417,8 @@ class Select extends Query {
 
   _init(q) {
     q = q || {};
+    this.ctx = q.ctx || {};
+    this.params = q.params || {};
     this.withs = q.withs || {};
     this.tables = q.tables || [];
     this.joins = q.joins || [];
@@ -438,16 +460,35 @@ class Select extends Query {
     }
     let withs = [];
     for (const q of queries) {
-      withs.push.apply(withs, Object.values(q.withs ? q.withs : {}));
+      withs.push.apply(withs, Object.values(q.query.withs ? q.query.withs : {}));
+      this.ctx = {...this.ctx, ...q.query.ctx};
+      this.params = {...this.params, ...q.query.params};
       q.withs = {};
     }
     withs = [...withs, ...queries]
     for (const q of withs) {
       this.withs[q.alias] = q;
-      this.fmt = q.fmt || this.fmt;
-      q.fmt = undefined;
+      this.fmt = q.query.fmt || this.fmt;
+      q.query.fmt = undefined;
     }
     return this;
+  }
+
+  /**
+   *
+   * @param param {Parameter}
+   */
+  addParam(param) {
+    this.params[param.name] = param
+    return this;
+  }
+
+  /**
+   *
+   * @param name {string}
+   */
+  getParam(name) {
+    return this.params[name];
   }
 
   /**
@@ -662,6 +703,7 @@ const Utility = {
   quoteTerm, term: quoteTerm,
   raw: (s) => new Raw(s),
   Condition: (...args) => new Condition(...args),
+  Parameter
 };
 
 

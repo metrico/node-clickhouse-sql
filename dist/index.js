@@ -7,12 +7,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
-
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
@@ -26,6 +20,12 @@ function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symb
 function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
 
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 function _construct(Parent, args, Class) { if (_isNativeReflectConstruct()) { _construct = Reflect.construct; } else { _construct = function _construct(Parent, args, Class) { var a = [null]; a.push.apply(a, args); var Constructor = Function.bind.apply(Parent, a); var instance = new Constructor(); if (Class) _setPrototypeOf(instance, Class.prototype); return instance; }; } return _construct.apply(null, arguments); }
 
@@ -634,26 +634,66 @@ var Query = /*#__PURE__*/function (_SQLObject8) {
   return Query;
 }(SQLObject);
 
+var Parameter = /*#__PURE__*/function (_SQLObject9) {
+  _inherits(Parameter, _SQLObject9);
+
+  var _super17 = _createSuper(Parameter);
+
+  function Parameter(name) {
+    var _this9;
+
+    _classCallCheck(this, Parameter);
+
+    _this9 = _super17.call(this);
+    _this9.name = name;
+    _this9.value = null;
+    return _this9;
+  }
+
+  _createClass(Parameter, [{
+    key: "set",
+    value: function set(value) {
+      this.value = value;
+    }
+  }, {
+    key: "get",
+    value: function get() {
+      return this.value;
+    }
+  }, {
+    key: "toString",
+    value: function toString() {
+      if (!this.value) {
+        throw new Error('Unspecified parameter ' + this.name);
+      }
+
+      return this.value.toString();
+    }
+  }]);
+
+  return Parameter;
+}(SQLObject);
+
 var With = /*#__PURE__*/function (_Query) {
   _inherits(With, _Query);
 
-  var _super17 = _createSuper(With);
+  var _super18 = _createSuper(With);
 
   function With(alias, query, inline) {
-    var _this9;
+    var _this10;
 
     _classCallCheck(this, With);
 
-    _this9 = _super17.call(this);
-    _this9.alias = alias;
+    _this10 = _super18.call(this);
+    _this10.alias = alias;
 
     if (!query instanceof Select) {
       throw new Error('query should be a select query');
     }
 
-    _this9.query = query;
-    _this9.inline = inline;
-    return _this9;
+    _this10.query = query;
+    _this10.inline = inline;
+    return _this10;
   }
 
   _createClass(With, [{
@@ -671,24 +711,24 @@ var With = /*#__PURE__*/function (_Query) {
   return With;
 }(Query);
 
-var WithReference = /*#__PURE__*/function (_SQLObject9) {
-  _inherits(WithReference, _SQLObject9);
+var WithReference = /*#__PURE__*/function (_SQLObject10) {
+  _inherits(WithReference, _SQLObject10);
 
-  var _super18 = _createSuper(WithReference);
+  var _super19 = _createSuper(WithReference);
 
   function WithReference(ref) {
-    var _this10;
+    var _this11;
 
     _classCallCheck(this, WithReference);
 
-    _this10 = _super18.call(this);
+    _this11 = _super19.call(this);
 
     if (!ref instanceof With) {
       throw new Error('reference should be a With object');
     }
 
-    _this10.ref = ref;
-    return _this10;
+    _this11.ref = ref;
+    return _this11;
   }
 
   _createClass(WithReference, [{
@@ -708,24 +748,26 @@ var WithReference = /*#__PURE__*/function (_SQLObject9) {
 var Select = /*#__PURE__*/function (_Query2) {
   _inherits(Select, _Query2);
 
-  var _super19 = _createSuper(Select);
+  var _super20 = _createSuper(Select);
 
   function Select() {
-    var _this11;
+    var _this12;
 
     _classCallCheck(this, Select);
 
-    _this11 = _super19.call(this);
+    _this12 = _super20.call(this);
 
-    _this11._init();
+    _this12._init();
 
-    return _this11;
+    return _this12;
   }
 
   _createClass(Select, [{
     key: "_init",
     value: function _init(q) {
       q = q || {};
+      this.ctx = q.ctx || {};
+      this.params = q.params || {};
       this.withs = q.withs || {};
       this.tables = q.tables || [];
       this.joins = q.joins || [];
@@ -753,7 +795,7 @@ var Select = /*#__PURE__*/function (_Query2) {
   }, {
     key: "select",
     value: function select() {
-      var _this12 = this;
+      var _this13 = this;
 
       for (var _len7 = arguments.length, columns = new Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
         columns[_key7] = arguments[_key7];
@@ -764,7 +806,7 @@ var Select = /*#__PURE__*/function (_Query2) {
       }
 
       columns.forEach(function (col) {
-        return _this12.select_list.push(col);
+        return _this13.select_list.push(col);
       });
       return this;
     }
@@ -788,7 +830,9 @@ var Select = /*#__PURE__*/function (_Query2) {
 
       for (var _i = 0, _queries = queries; _i < _queries.length; _i++) {
         var q = _queries[_i];
-        withs.push.apply(withs, Object.values(q.withs ? q.withs : {}));
+        withs.push.apply(withs, Object.values(q.query.withs ? q.query.withs : {}));
+        this.ctx = _objectSpread(_objectSpread({}, this.ctx), q.query.ctx);
+        this.params = _objectSpread(_objectSpread({}, this.params), q.query.params);
         q.withs = {};
       }
 
@@ -801,8 +845,8 @@ var Select = /*#__PURE__*/function (_Query2) {
         for (_iterator.s(); !(_step = _iterator.n()).done;) {
           var _q = _step.value;
           this.withs[_q.alias] = _q;
-          this.fmt = _q.fmt || this.fmt;
-          _q.fmt = undefined;
+          this.fmt = _q.query.fmt || this.fmt;
+          _q.query.fmt = undefined;
         }
       } catch (err) {
         _iterator.e(err);
@@ -811,6 +855,27 @@ var Select = /*#__PURE__*/function (_Query2) {
       }
 
       return this;
+    }
+    /**
+     *
+     * @param param {Parameter}
+     */
+
+  }, {
+    key: "addParam",
+    value: function addParam(param) {
+      this.params[param.name] = param;
+      return this;
+    }
+    /**
+     *
+     * @param name {string}
+     */
+
+  }, {
+    key: "getParam",
+    value: function getParam(name) {
+      return this.params[name];
     }
     /**
      * @usage
@@ -919,14 +984,14 @@ var Select = /*#__PURE__*/function (_Query2) {
   }, {
     key: "groupBy",
     value: function groupBy() {
-      var _this13 = this;
+      var _this14 = this;
 
       for (var _len11 = arguments.length, aggregateExpressions = new Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
         aggregateExpressions[_key11] = arguments[_key11];
       }
 
       aggregateExpressions.forEach(function (a) {
-        return _this13.aggregations.push(a);
+        return _this14.aggregations.push(a);
       });
       return this;
     }
@@ -1048,7 +1113,8 @@ var Utility = {
     }
 
     return _construct(_Condition3, args);
-  }
+  },
+  Parameter: Parameter
 };
 var Shortcuts = {
   And: function And() {
