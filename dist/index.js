@@ -767,6 +767,7 @@ var Select = /*#__PURE__*/function (_Query2) {
     value: function _init(q) {
       q = q || {};
       this.ctx = q.ctx || {};
+      this.dist = false;
       this.params = q.params || {};
       this.withs = q.withs || {};
       this.tables = q.tables || [];
@@ -782,6 +783,12 @@ var Select = /*#__PURE__*/function (_Query2) {
       this.limits = q.limits || undefined;
       this.limitbycolumns = q.limitbycolumns || undefined;
       this.fmt = q.fmt || undefined;
+    }
+  }, {
+    key: "distinct",
+    value: function distinct(dist) {
+      this.dist = dist;
+      return this;
     }
   }, {
     key: "clone",
@@ -1061,6 +1068,7 @@ var Select = /*#__PURE__*/function (_Query2) {
         }).join();
       }
 
+      var dist = this.dist ? 'DISTINCT' : '';
       var from = this.from().map(function (table) {
         return table.length === 1 ? table[0] : table[0] + ' as ' + table[1];
       });
@@ -1084,7 +1092,7 @@ var Select = /*#__PURE__*/function (_Query2) {
       }).join() : '';
       var limit = this.limits ? "limit " + (typeof this.limits.offset === "undefined" ? this.limits.number : this.limits.offset + ", " + this.limits.number) : '';
       var format = this.fmt ? " format " + this.fmt.toUpperCase() : "";
-      var parts = [wth, "select", select_list, from, join, sample, prewhere, where, groupby, with_totals, having, order_by, limitby, limit, format].filter(function (v) {
+      var parts = [wth, "select", dist, select_list, from, join, sample, prewhere, where, groupby, with_totals, having, order_by, limitby, limit, format].filter(function (v) {
         return v && v != '';
       });
       return parts.join(' ');
