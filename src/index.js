@@ -644,7 +644,10 @@ class Select extends Query {
     from = from.length ? "from " + from.join() : "";
 
     let join = this.joins.map((join) => {
-      return ((join.type) ? join.type + ' ' : '') + 'join ' + join.table + ' on ' + join.conditions;
+      const table = Array.isArray(join.table) && join.table.length > 1
+        ? [quoteTerm(join.table[0]), join.table[1]].join(' as ')
+        : join.table;
+      return ((join.type) ? join.type + ' ' : '') + 'join ' + table + ' on ' + join.conditions;
     }).join(' ');
 
     let prewhere = this.preconditions.length ? "prewhere " + this.preconditions : "";

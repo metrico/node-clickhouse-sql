@@ -1074,7 +1074,8 @@ var Select = /*#__PURE__*/function (_Query2) {
       });
       from = from.length ? "from " + from.join() : "";
       var join = this.joins.map(function (join) {
-        return (join.type ? join.type + ' ' : '') + 'join ' + join.table + ' on ' + join.conditions;
+        var table = Array.isArray(join.table) && join.table.length > 1 ? [quoteTerm(join.table[0]), join.table[1]].join(' as ') : join.table;
+        return (join.type ? join.type + ' ' : '') + 'join ' + table + ' on ' + join.conditions;
       }).join(' ');
       var prewhere = this.preconditions.length ? "prewhere " + this.preconditions : "";
       var where = this.conditions.length ? "where " + this.conditions : "";
