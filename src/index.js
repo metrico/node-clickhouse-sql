@@ -418,6 +418,7 @@ class Select extends Query {
   _init(q) {
     q = q || {};
     this.ctx = q.ctx || {};
+    this.dist = false;
     this.params = q.params || {};
     this.withs = q.withs || {};
     this.tables = q.tables || [];
@@ -433,6 +434,11 @@ class Select extends Query {
     this.limits = q.limits || undefined;
     this.limitbycolumns = q.limitbycolumns || undefined;
     this.fmt = q.fmt || undefined;
+  }
+
+  distinct(dist) {
+    this.dist = dist;
+    return this;
   }
 
   clone() {
@@ -627,6 +633,8 @@ class Select extends Query {
       ).join();
     }
 
+    const dist = this.dist ? 'DISTINCT' : '';
+
     let from = this.from().map(
       (table) =>
         table.length === 1
@@ -671,6 +679,7 @@ class Select extends Query {
     const parts = [
       wth,
       "select",
+      dist,
       select_list,
       from,
       join,
