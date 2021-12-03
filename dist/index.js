@@ -962,15 +962,15 @@ var Select = /*#__PURE__*/function (_Query2) {
   }, {
     key: "orderBy",
     value: function orderBy() {
-      var _this14 = this;
-
       for (var _len13 = arguments.length, expressions = new Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
         expressions[_key13] = arguments[_key13];
       }
 
-      expressions.forEach(function (e) {
-        return _this14.order_expressions.push(e);
-      });
+      if (!expressions.length) {
+        return this.order_expressions;
+      }
+
+      this.order_expressions = expressions;
       return this;
     }
   }, {
