@@ -840,7 +840,7 @@ var Select = /*#__PURE__*/function (_Query2) {
         withs.push.apply(withs, Object.values(q.query.withs ? q.query.withs : {}));
         this.ctx = _objectSpread(_objectSpread({}, this.ctx), q.query.ctx);
         this.params = _objectSpread(_objectSpread({}, this.params), q.query.params);
-        q.withs = {};
+        q.query.withs = {};
       }
 
       withs = [].concat(_toConsumableArray(withs), queries);

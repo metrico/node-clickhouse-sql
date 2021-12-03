@@ -469,7 +469,7 @@ class Select extends Query {
       withs.push.apply(withs, Object.values(q.query.withs ? q.query.withs : {}));
       this.ctx = {...this.ctx, ...q.query.ctx};
       this.params = {...this.params, ...q.query.params};
-      q.withs = {};
+      q.query.withs = {};
     }
     withs = [...withs, ...queries]
     for (const q of withs) {
