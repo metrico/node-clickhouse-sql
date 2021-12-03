@@ -44,6 +44,11 @@ class Conditions extends SQLObject {
   get length() {
     return this.args.length;
   }
+
+  _argToStr(arg) {
+    return (arg.toString) ? arg.toString() : arg;
+  }
+
 }
 
 class Disjunction extends Conditions {
@@ -52,7 +57,8 @@ class Disjunction extends Conditions {
   }
 
   toString() {
-    return this.args.length ? this.args.map(arg => "(" + arg + ")").join(" or ") : "";
+    const self = this;
+    return this.args.length ? this.args.map(arg => `(${self._argToStr(arg)})`).join(" or ") : "";
   }
 }
 
@@ -63,11 +69,8 @@ class Conjunction extends Conditions {
 
   toString() {
     if (!this.args.length) return "";
-
-    return this.args.map((arg) => {
-      const s = (arg.toString) ? arg.toString() : arg;
-      return "(" + s + ")";
-    }).join(" and ");
+    const self = this;
+    return this.args.map((arg) => `(${self._argToStr(arg)})`).join(" and ");
   }
 }
 
@@ -112,33 +115,33 @@ class InclusionOperator extends Condition {
       " (",
       Array.isArray(this.value)
         ? this.value.map(val => quoteVal(val)).join(',')
-        : this.value,
+        : quoteVal(this.value),
       ")"
     ].join('');
   }
 }
 
 class In extends InclusionOperator {
-  constructor(...args) {
-    super("in", ...args);
+  constructor(column, operator, values) {
+    super("in", column, operator, values);
   }
 }
 
 class NotIn extends InclusionOperator {
-  constructor(...args) {
-    super("not in", ...args);
+  constructor(column, operator, values) {
+    super("not in", column, operator, values);
   }
 }
 
 class GlobalNotIn extends InclusionOperator {
-  constructor(...args) {
-    super("global not in", ...args);
+  constructor(column, operator, values) {
+    super("global not in", column, operator, values);
   }
 }
 
 class GlobalIn extends InclusionOperator {
-  constructor(...args) {
-    super("global in", ...args);
+  constructor(column, operator, values) {
+    super("global in", column, operator, values);
   }
 }
 
@@ -351,23 +354,69 @@ class Raw extends SQLObject {
 class Query extends SQLObject {
 }
 
+class With extends Query {
+  constructor(alias, query, inline) {
+    super();
+    this.alias = alias;
+    if (!query instanceof Select) {
+      throw new Error('query should be a select query');
+    }
+    this.query = query;
+    this.inline = inline;
+  }
+  toString() {
+    if (this.inline) {
+      return '';
+    }
+    this.fmt = undefined;
+    return `${this.alias} AS (${this.query.toString()})`
+  }
+}
+
+class WithReference extends SQLObject {
+  constructor(ref) {
+    super();
+    if (!ref instanceof With) {
+      throw new Error('reference should be a With object');
+    }
+    this.ref = ref;
+  }
+  toString() {
+    if (this.ref.inline) {
+      return `${this.ref.query.toString()} as ${this.ref.alias}}`;
+    }
+    return this.ref.alias;
+  }
+}
+
 class Select extends Query {
   constructor() {
     super();
+    this._init()
+  }
 
-    this.tables = [];
-    this.joins = [];
-    this.conditions = new Conjunction();
-    this.having_conditions = new Conjunction();
-    this.preconditions = new Conjunction();
-    this.aggregations = [];
-    this.select_list = [];
-    this.order_expressions = [];
-    this.request_totals = undefined;
-    this.sampling = undefined;
-    this.limits = undefined;
-    this.limitbycolumns = undefined;
-    this.fmt = undefined;
+  _init(q) {
+    q = q || {};
+    this.withs = q.withs || {};
+    this.tables = q.tables || [];
+    this.joins = q.joins || [];
+    this.conditions = q.conditions || new Conjunction();
+    this.having_conditions = q.having_conditions || new Conjunction();
+    this.preconditions = q.preconditions || new Conjunction();
+    this.aggregations = q.aggregations || [];
+    this.select_list = q.select_list || [];
+    this.order_expressions = q.order_expressions || [];
+    this.request_totals = q.request_totals || undefined;
+    this.sampling = q.sampling || undefined;
+    this.limits = q.limits || undefined;
+    this.limitbycolumns = q.limitbycolumns || undefined;
+    this.fmt = q.fmt || undefined;
+  }
+
+  clone() {
+    const s = new Select();
+    s._init(this);
+    return s;
   }
 
   select(...columns) {
@@ -376,6 +425,28 @@ class Select extends Query {
     }
 
     columns.forEach((col) => this.select_list.push(col));
+    return this;
+  }
+
+  /**
+   *
+   * @param queries {With}
+   */
+  with(...queries) {
+    if (!queries.length) {
+      return this.withs;
+    }
+    let withs = [];
+    for (const q of queries) {
+      withs.push.apply(withs, Object.values(q.withs ? q.withs : {}));
+      q.withs = {};
+    }
+    withs = [...withs, ...queries]
+    for (const q of withs) {
+      this.withs[q.alias] = q;
+      this.fmt = q.fmt || this.fmt;
+      q.fmt = undefined;
+    }
     return this;
   }
 
@@ -499,6 +570,8 @@ class Select extends Query {
   }
 
   toString() {
+    let wth = Object.values(this.with()).filter(w => !w.inline);
+    wth = wth.length ? "WITH " + wth.join(', ') : '';
     let select_list;
     if (this.select_list.length === 0) {
       select_list = "*";
@@ -552,6 +625,7 @@ class Select extends Query {
       : "";
 
     const parts = [
+      wth,
       "select",
       select_list,
       from,
@@ -566,7 +640,7 @@ class Select extends Query {
       limitby,
       limit,
       format,
-    ].filter((v) => v != '');
+    ].filter((v) => v && v != '');
 
     return parts.join(' ');
   }
@@ -574,7 +648,9 @@ class Select extends Query {
 
 
 const Queries = {
-  Select
+  Select,
+  With,
+  WithReference
 };
 
 

@@ -13,6 +13,20 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
+function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
+
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
 function _construct(Parent, args, Class) { if (_isNativeReflectConstruct()) { _construct = Reflect.construct; } else { _construct = function _construct(Parent, args, Class) { var a = [null]; a.push.apply(a, args); var Constructor = Function.bind.apply(Parent, a); var instance = new Constructor(); if (Class) _setPrototypeOf(instance, Class.prototype); return instance; }; } return _construct.apply(null, arguments); }
 
 function _get(target, property, receiver) { if (typeof Reflect !== "undefined" && Reflect.get) { _get = Reflect.get; } else { _get = function _get(target, property, receiver) { var base = _superPropBase(target, property); if (!base) return; var desc = Object.getOwnPropertyDescriptor(base, property); if (desc.get) { return desc.get.call(receiver); } return desc.value; }; } return _get(target, property, receiver || target); }
@@ -102,6 +116,11 @@ var Conditions = /*#__PURE__*/function (_SQLObject) {
     get: function get() {
       return this.args.length;
     }
+  }, {
+    key: "_argToStr",
+    value: function _argToStr(arg) {
+      return arg.toString ? arg.toString() : arg;
+    }
   }]);
 
   return Conditions;
@@ -125,8 +144,9 @@ var Disjunction = /*#__PURE__*/function (_Conditions) {
   _createClass(Disjunction, [{
     key: "toString",
     value: function toString() {
+      var self = this;
       return this.args.length ? this.args.map(function (arg) {
-        return "(" + arg + ")";
+        return "(".concat(self._argToStr(arg), ")");
       }).join(" or ") : "";
     }
   }]);
@@ -153,9 +173,9 @@ var Conjunction = /*#__PURE__*/function (_Conditions2) {
     key: "toString",
     value: function toString() {
       if (!this.args.length) return "";
+      var self = this;
       return this.args.map(function (arg) {
-        var s = arg.toString ? arg.toString() : arg;
-        return "(" + s + ")";
+        return "(".concat(self._argToStr(arg), ")");
       }).join(" and ");
     }
   }]);
@@ -235,7 +255,7 @@ var InclusionOperator = /*#__PURE__*/function (_Condition2) {
     value: function toString() {
       return [quoteTerm(this.column), " ", this.operator, " (", Array.isArray(this.value) ? this.value.map(function (val) {
         return quoteVal(val);
-      }).join(',') : this.value, ")"].join('');
+      }).join(',') : quoteVal(this.value), ")"].join('');
     }
   }]);
 
@@ -247,14 +267,10 @@ var In = /*#__PURE__*/function (_InclusionOperator) {
 
   var _super7 = _createSuper(In);
 
-  function In() {
+  function In(column, operator, values) {
     _classCallCheck(this, In);
 
-    for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-      args[_key4] = arguments[_key4];
-    }
-
-    return _super7.call.apply(_super7, [this, "in"].concat(args));
+    return _super7.call(this, "in", column, operator, values);
   }
 
   return In;
@@ -265,14 +281,10 @@ var NotIn = /*#__PURE__*/function (_InclusionOperator2) {
 
   var _super8 = _createSuper(NotIn);
 
-  function NotIn() {
+  function NotIn(column, operator, values) {
     _classCallCheck(this, NotIn);
 
-    for (var _len5 = arguments.length, args = new Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-      args[_key5] = arguments[_key5];
-    }
-
-    return _super8.call.apply(_super8, [this, "not in"].concat(args));
+    return _super8.call(this, "not in", column, operator, values);
   }
 
   return NotIn;
@@ -283,14 +295,10 @@ var GlobalNotIn = /*#__PURE__*/function (_InclusionOperator3) {
 
   var _super9 = _createSuper(GlobalNotIn);
 
-  function GlobalNotIn() {
+  function GlobalNotIn(column, operator, values) {
     _classCallCheck(this, GlobalNotIn);
 
-    for (var _len6 = arguments.length, args = new Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-      args[_key6] = arguments[_key6];
-    }
-
-    return _super9.call.apply(_super9, [this, "global not in"].concat(args));
+    return _super9.call(this, "global not in", column, operator, values);
   }
 
   return GlobalNotIn;
@@ -301,14 +309,10 @@ var GlobalIn = /*#__PURE__*/function (_InclusionOperator4) {
 
   var _super10 = _createSuper(GlobalIn);
 
-  function GlobalIn() {
+  function GlobalIn(column, operator, values) {
     _classCallCheck(this, GlobalIn);
 
-    for (var _len7 = arguments.length, args = new Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
-      args[_key7] = arguments[_key7];
-    }
-
-    return _super10.call.apply(_super10, [this, "global in"].concat(args));
+    return _super10.call(this, "global in", column, operator, values);
   }
 
   return GlobalIn;
@@ -359,8 +363,8 @@ var Operators = {
 };
 
 function createCondition() {
-  for (var _len8 = arguments.length, args = new Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
-    args[_key8] = arguments[_key8];
+  for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+    args[_key4] = arguments[_key4];
   }
 
   switch (args.length) {
@@ -503,8 +507,8 @@ var SQLFunction = /*#__PURE__*/function (_SQLObject6) {
     _this7 = _super14.call(this);
     _this7.name = name;
 
-    for (var _len9 = arguments.length, args = new Array(_len9 > 1 ? _len9 - 1 : 0), _key9 = 1; _key9 < _len9; _key9++) {
-      args[_key9 - 1] = arguments[_key9];
+    for (var _len5 = arguments.length, args = new Array(_len5 > 1 ? _len5 - 1 : 0), _key5 = 1; _key5 < _len5; _key5++) {
+      args[_key5 - 1] = arguments[_key5];
     }
 
     _this7.args = args;
@@ -525,8 +529,8 @@ var SQLFunction = /*#__PURE__*/function (_SQLObject6) {
 
 var _curry_f = function _curry_f(name) {
   return function () {
-    for (var _len10 = arguments.length, args = new Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
-      args[_key10] = arguments[_key10];
+    for (var _len6 = arguments.length, args = new Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+      args[_key6] = arguments[_key6];
     }
 
     return _construct(SQLFunction, [name].concat(args));
@@ -630,40 +634,129 @@ var Query = /*#__PURE__*/function (_SQLObject8) {
   return Query;
 }(SQLObject);
 
-var Select = /*#__PURE__*/function (_Query) {
-  _inherits(Select, _Query);
+var With = /*#__PURE__*/function (_Query) {
+  _inherits(With, _Query);
 
-  var _super17 = _createSuper(Select);
+  var _super17 = _createSuper(With);
 
-  function Select() {
+  function With(alias, query, inline) {
     var _this9;
 
-    _classCallCheck(this, Select);
+    _classCallCheck(this, With);
 
     _this9 = _super17.call(this);
-    _this9.tables = [];
-    _this9.joins = [];
-    _this9.conditions = new Conjunction();
-    _this9.having_conditions = new Conjunction();
-    _this9.preconditions = new Conjunction();
-    _this9.aggregations = [];
-    _this9.select_list = [];
-    _this9.order_expressions = [];
-    _this9.request_totals = undefined;
-    _this9.sampling = undefined;
-    _this9.limits = undefined;
-    _this9.limitbycolumns = undefined;
-    _this9.fmt = undefined;
+    _this9.alias = alias;
+
+    if (!query instanceof Select) {
+      throw new Error('query should be a select query');
+    }
+
+    _this9.query = query;
+    _this9.inline = inline;
     return _this9;
   }
 
+  _createClass(With, [{
+    key: "toString",
+    value: function toString() {
+      if (this.inline) {
+        return '';
+      }
+
+      this.fmt = undefined;
+      return "".concat(this.alias, " AS (").concat(this.query.toString(), ")");
+    }
+  }]);
+
+  return With;
+}(Query);
+
+var WithReference = /*#__PURE__*/function (_SQLObject9) {
+  _inherits(WithReference, _SQLObject9);
+
+  var _super18 = _createSuper(WithReference);
+
+  function WithReference(ref) {
+    var _this10;
+
+    _classCallCheck(this, WithReference);
+
+    _this10 = _super18.call(this);
+
+    if (!ref instanceof With) {
+      throw new Error('reference should be a With object');
+    }
+
+    _this10.ref = ref;
+    return _this10;
+  }
+
+  _createClass(WithReference, [{
+    key: "toString",
+    value: function toString() {
+      if (this.ref.inline) {
+        return "".concat(this.ref.query.toString(), " as ").concat(this.ref.alias, "}");
+      }
+
+      return this.ref.alias;
+    }
+  }]);
+
+  return WithReference;
+}(SQLObject);
+
+var Select = /*#__PURE__*/function (_Query2) {
+  _inherits(Select, _Query2);
+
+  var _super19 = _createSuper(Select);
+
+  function Select() {
+    var _this11;
+
+    _classCallCheck(this, Select);
+
+    _this11 = _super19.call(this);
+
+    _this11._init();
+
+    return _this11;
+  }
+
   _createClass(Select, [{
+    key: "_init",
+    value: function _init(q) {
+      q = q || {};
+      this.withs = q.withs || {};
+      this.tables = q.tables || [];
+      this.joins = q.joins || [];
+      this.conditions = q.conditions || new Conjunction();
+      this.having_conditions = q.having_conditions || new Conjunction();
+      this.preconditions = q.preconditions || new Conjunction();
+      this.aggregations = q.aggregations || [];
+      this.select_list = q.select_list || [];
+      this.order_expressions = q.order_expressions || [];
+      this.request_totals = q.request_totals || undefined;
+      this.sampling = q.sampling || undefined;
+      this.limits = q.limits || undefined;
+      this.limitbycolumns = q.limitbycolumns || undefined;
+      this.fmt = q.fmt || undefined;
+    }
+  }, {
+    key: "clone",
+    value: function clone() {
+      var s = new Select();
+
+      s._init(this);
+
+      return s;
+    }
+  }, {
     key: "select",
     value: function select() {
-      var _this10 = this;
+      var _this12 = this;
 
-      for (var _len11 = arguments.length, columns = new Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
-        columns[_key11] = arguments[_key11];
+      for (var _len7 = arguments.length, columns = new Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
+        columns[_key7] = arguments[_key7];
       }
 
       if (columns.length === 0) {
@@ -671,8 +764,52 @@ var Select = /*#__PURE__*/function (_Query) {
       }
 
       columns.forEach(function (col) {
-        return _this10.select_list.push(col);
+        return _this12.select_list.push(col);
       });
+      return this;
+    }
+    /**
+     *
+     * @param queries {With}
+     */
+
+  }, {
+    key: "with",
+    value: function _with() {
+      for (var _len8 = arguments.length, queries = new Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
+        queries[_key8] = arguments[_key8];
+      }
+
+      if (!queries.length) {
+        return this.withs;
+      }
+
+      var withs = [];
+
+      for (var _i = 0, _queries = queries; _i < _queries.length; _i++) {
+        var q = _queries[_i];
+        withs.push.apply(withs, Object.values(q.withs ? q.withs : {}));
+        q.withs = {};
+      }
+
+      withs = [].concat(_toConsumableArray(withs), queries);
+
+      var _iterator = _createForOfIteratorHelper(withs),
+          _step;
+
+      try {
+        for (_iterator.s(); !(_step = _iterator.n()).done;) {
+          var _q = _step.value;
+          this.withs[_q.alias] = _q;
+          this.fmt = _q.fmt || this.fmt;
+          _q.fmt = undefined;
+        }
+      } catch (err) {
+        _iterator.e(err);
+      } finally {
+        _iterator.f();
+      }
+
       return this;
     }
     /**
@@ -687,8 +824,8 @@ var Select = /*#__PURE__*/function (_Query) {
   }, {
     key: "from",
     value: function from() {
-      for (var _len12 = arguments.length, tables = new Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
-        tables[_key12] = arguments[_key12];
+      for (var _len9 = arguments.length, tables = new Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
+        tables[_key9] = arguments[_key9];
       }
 
       if (!tables.length) {
@@ -715,8 +852,8 @@ var Select = /*#__PURE__*/function (_Query) {
   }, {
     key: "join",
     value: function join(table, type) {
-      for (var _len13 = arguments.length, conditions = new Array(_len13 > 2 ? _len13 - 2 : 0), _key13 = 2; _key13 < _len13; _key13++) {
-        conditions[_key13 - 2] = arguments[_key13];
+      for (var _len10 = arguments.length, conditions = new Array(_len10 > 2 ? _len10 - 2 : 0), _key10 = 2; _key10 < _len10; _key10++) {
+        conditions[_key10 - 2] = arguments[_key10];
       }
 
       if (typeof table === "string") table = quoteTerm(table);
@@ -782,14 +919,14 @@ var Select = /*#__PURE__*/function (_Query) {
   }, {
     key: "groupBy",
     value: function groupBy() {
-      var _this11 = this;
+      var _this13 = this;
 
-      for (var _len14 = arguments.length, aggregateExpressions = new Array(_len14), _key14 = 0; _key14 < _len14; _key14++) {
-        aggregateExpressions[_key14] = arguments[_key14];
+      for (var _len11 = arguments.length, aggregateExpressions = new Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
+        aggregateExpressions[_key11] = arguments[_key11];
       }
 
       aggregateExpressions.forEach(function (a) {
-        return _this11.aggregations.push(a);
+        return _this13.aggregations.push(a);
       });
       return this;
     }
@@ -812,8 +949,8 @@ var Select = /*#__PURE__*/function (_Query) {
   }, {
     key: "limitBy",
     value: function limitBy(limit) {
-      for (var _len15 = arguments.length, columns = new Array(_len15 > 1 ? _len15 - 1 : 0), _key15 = 1; _key15 < _len15; _key15++) {
-        columns[_key15 - 1] = arguments[_key15];
+      for (var _len12 = arguments.length, columns = new Array(_len12 > 1 ? _len12 - 1 : 0), _key12 = 1; _key12 < _len12; _key12++) {
+        columns[_key12 - 1] = arguments[_key12];
       }
 
       this.limitbycolumns = {
@@ -825,14 +962,14 @@ var Select = /*#__PURE__*/function (_Query) {
   }, {
     key: "orderBy",
     value: function orderBy() {
-      var _this12 = this;
+      var _this14 = this;
 
-      for (var _len16 = arguments.length, expressions = new Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
-        expressions[_key16] = arguments[_key16];
+      for (var _len13 = arguments.length, expressions = new Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
+        expressions[_key13] = arguments[_key13];
       }
 
       expressions.forEach(function (e) {
-        return _this12.order_expressions.push(e);
+        return _this14.order_expressions.push(e);
       });
       return this;
     }
@@ -845,6 +982,10 @@ var Select = /*#__PURE__*/function (_Query) {
   }, {
     key: "toString",
     value: function toString() {
+      var wth = Object.values(this["with"]()).filter(function (w) {
+        return !w.inline;
+      });
+      wth = wth.length ? "WITH " + wth.join(', ') : '';
       var select_list;
 
       if (this.select_list.length === 0) {
@@ -878,8 +1019,8 @@ var Select = /*#__PURE__*/function (_Query) {
       }).join() : '';
       var limit = this.limits ? "limit " + (typeof this.limits.offset === "undefined" ? this.limits.number : this.limits.offset + ", " + this.limits.number) : '';
       var format = this.fmt ? " format " + this.fmt.toUpperCase() : "";
-      var parts = ["select", select_list, from, join, sample, prewhere, where, groupby, with_totals, having, order_by, limitby, limit, format].filter(function (v) {
-        return v != '';
+      var parts = [wth, "select", select_list, from, join, sample, prewhere, where, groupby, with_totals, having, order_by, limitby, limit, format].filter(function (v) {
+        return v && v != '';
       });
       return parts.join(' ');
     }
@@ -889,7 +1030,9 @@ var Select = /*#__PURE__*/function (_Query) {
 }(Query);
 
 var Queries = {
-  Select: Select
+  Select: Select,
+  With: With,
+  WithReference: WithReference
 };
 var Utility = {
   quoteVal: quoteVal,
@@ -900,8 +1043,8 @@ var Utility = {
     return new Raw(s);
   },
   Condition: function Condition() {
-    for (var _len17 = arguments.length, args = new Array(_len17), _key17 = 0; _key17 < _len17; _key17++) {
-      args[_key17] = arguments[_key17];
+    for (var _len14 = arguments.length, args = new Array(_len14), _key14 = 0; _key14 < _len14; _key14++) {
+      args[_key14] = arguments[_key14];
     }
 
     return _construct(_Condition3, args);
@@ -909,15 +1052,15 @@ var Utility = {
 };
 var Shortcuts = {
   And: function And() {
-    for (var _len18 = arguments.length, args = new Array(_len18), _key18 = 0; _key18 < _len18; _key18++) {
-      args[_key18] = arguments[_key18];
+    for (var _len15 = arguments.length, args = new Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
+      args[_key15] = arguments[_key15];
     }
 
     return _construct(Conjunction, args);
   },
   Or: function Or() {
-    for (var _len19 = arguments.length, args = new Array(_len19), _key19 = 0; _key19 < _len19; _key19++) {
-      args[_key19] = arguments[_key19];
+    for (var _len16 = arguments.length, args = new Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
+      args[_key16] = arguments[_key16];
     }
 
     return _construct(Disjunction, args);
