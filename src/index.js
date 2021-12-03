@@ -560,7 +560,10 @@ class Select extends Query {
   }
 
   orderBy(...expressions) {
-    expressions.forEach(e => this.order_expressions.push(e));
+    if (!expressions.length) {
+      return this.order_expressions;
+    }
+    this.order_expressions = expressions;
     return this;
   }
 
