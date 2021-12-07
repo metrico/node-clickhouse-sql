@@ -367,7 +367,7 @@ class Parameter extends SQLObject {
     return this.value;
   }
   toString() {
-    if (!this.value) {
+    if (typeof this.value === 'undefined') {
       throw new Error('Unspecified parameter ' + this.name);
     }
     return this.value.toString();
@@ -406,6 +406,30 @@ class WithReference extends SQLObject {
       return `${this.ref.query.toString()} as ${this.ref.alias}}`;
     }
     return this.ref.alias;
+  }
+}
+
+class Subquery extends SQLObject {
+  /**
+   *
+   * @param query {Select}
+   */
+  constructor(query) {
+    super();
+    this.query = query;
+  }
+  toString() {
+    return `(${this.query})`;
+  }
+}
+
+class UnionAll extends Query {
+  constructor(...queries) {
+    super();
+    this.queries = queries;
+  }
+  toString() {
+    return this.queries.join(' UNION ALL ');
   }
 }
 
@@ -513,12 +537,14 @@ class Select extends Query {
     tables = tables.map(table => {
       if (typeof table === "string") return [quoteTerm(table)];
       if (Array.isArray(table)) {
-        if (table[0] instanceof Select) table[0] = '(' + table[0].toString() + ')';
+        if (table[0] instanceof Query) table[0] = new Subquery(table[0]);
+        else if (table[0] instanceof SQLObject) table[0] = table[0];
         else table[0] = quoteTerm(table[0]);
         table[1] = quoteTerm(table[1]);
         return table;
       }
-      if (table instanceof Select) return ['(' + table.toString() + ')'];
+      if (table instanceof Query) return [new Subquery(table)];
+      if (table instanceof SQLObject) return [table];
 
       let alias = Object.values(table)[0];
       if (alias instanceof Select) alias = '(' + alias.toString() + ')';
@@ -593,6 +619,10 @@ class Select extends Query {
   }
 
   limit(number, offset) {
+    if (!number && !offset) {
+      this.limits = undefined
+      return this
+    }
     this.limits = {
       number, offset
     };
@@ -616,6 +646,18 @@ class Select extends Query {
 
   format(fmt) {
     this.fmt = fmt;
+    return this;
+  }
+
+  having(...args) {
+    if (!args.length) {
+      return this.having_conditions;
+    }
+    if (args.length === 1 && args[0] instanceof Condition) {
+      this.having_conditions.push(args[0]);
+    } else {
+      this.having_conditions.push(createCondition(...args));
+    }
     return this;
   }
 
@@ -706,7 +748,9 @@ class Select extends Query {
 const Queries = {
   Select,
   With,
-  WithReference
+  WithReference,
+  Raw,
+  UnionAll
 };
 
 

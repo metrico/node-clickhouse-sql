@@ -663,7 +663,7 @@ var Parameter = /*#__PURE__*/function (_SQLObject9) {
   }, {
     key: "toString",
     value: function toString() {
-      if (!this.value) {
+      if (typeof this.value === 'undefined') {
         throw new Error('Unspecified parameter ' + this.name);
       }
 
@@ -745,21 +745,80 @@ var WithReference = /*#__PURE__*/function (_SQLObject10) {
   return WithReference;
 }(SQLObject);
 
-var Select = /*#__PURE__*/function (_Query2) {
-  _inherits(Select, _Query2);
+var Subquery = /*#__PURE__*/function (_SQLObject11) {
+  _inherits(Subquery, _SQLObject11);
 
-  var _super20 = _createSuper(Select);
+  var _super20 = _createSuper(Subquery);
+
+  /**
+   *
+   * @param query {Select}
+   */
+  function Subquery(query) {
+    var _this12;
+
+    _classCallCheck(this, Subquery);
+
+    _this12 = _super20.call(this);
+    _this12.query = query;
+    return _this12;
+  }
+
+  _createClass(Subquery, [{
+    key: "toString",
+    value: function toString() {
+      return "(".concat(this.query, ")");
+    }
+  }]);
+
+  return Subquery;
+}(SQLObject);
+
+var UnionAll = /*#__PURE__*/function (_Query2) {
+  _inherits(UnionAll, _Query2);
+
+  var _super21 = _createSuper(UnionAll);
+
+  function UnionAll() {
+    var _this13;
+
+    _classCallCheck(this, UnionAll);
+
+    _this13 = _super21.call(this);
+
+    for (var _len7 = arguments.length, queries = new Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
+      queries[_key7] = arguments[_key7];
+    }
+
+    _this13.queries = queries;
+    return _this13;
+  }
+
+  _createClass(UnionAll, [{
+    key: "toString",
+    value: function toString() {
+      return this.queries.join(' UNION ALL ');
+    }
+  }]);
+
+  return UnionAll;
+}(Query);
+
+var Select = /*#__PURE__*/function (_Query3) {
+  _inherits(Select, _Query3);
+
+  var _super22 = _createSuper(Select);
 
   function Select() {
-    var _this12;
+    var _this14;
 
     _classCallCheck(this, Select);
 
-    _this12 = _super20.call(this);
+    _this14 = _super22.call(this);
 
-    _this12._init();
+    _this14._init();
 
-    return _this12;
+    return _this14;
   }
 
   _createClass(Select, [{
@@ -802,10 +861,10 @@ var Select = /*#__PURE__*/function (_Query2) {
   }, {
     key: "select",
     value: function select() {
-      var _this13 = this;
+      var _this15 = this;
 
-      for (var _len7 = arguments.length, columns = new Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
-        columns[_key7] = arguments[_key7];
+      for (var _len8 = arguments.length, columns = new Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
+        columns[_key8] = arguments[_key8];
       }
 
       if (columns.length === 0) {
@@ -813,7 +872,7 @@ var Select = /*#__PURE__*/function (_Query2) {
       }
 
       columns.forEach(function (col) {
-        return _this13.select_list.push(col);
+        return _this15.select_list.push(col);
       });
       return this;
     }
@@ -825,8 +884,8 @@ var Select = /*#__PURE__*/function (_Query2) {
   }, {
     key: "with",
     value: function _with() {
-      for (var _len8 = arguments.length, queries = new Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
-        queries[_key8] = arguments[_key8];
+      for (var _len9 = arguments.length, queries = new Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
+        queries[_key9] = arguments[_key9];
       }
 
       if (!queries.length) {
@@ -896,8 +955,8 @@ var Select = /*#__PURE__*/function (_Query2) {
   }, {
     key: "from",
     value: function from() {
-      for (var _len9 = arguments.length, tables = new Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
-        tables[_key9] = arguments[_key9];
+      for (var _len10 = arguments.length, tables = new Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
+        tables[_key10] = arguments[_key10];
       }
 
       if (!tables.length) {
@@ -908,12 +967,13 @@ var Select = /*#__PURE__*/function (_Query2) {
         if (typeof table === "string") return [quoteTerm(table)];
 
         if (Array.isArray(table)) {
-          if (table[0] instanceof Select) table[0] = '(' + table[0].toString() + ')';else table[0] = quoteTerm(table[0]);
+          if (table[0] instanceof Query) table[0] = new Subquery(table[0]);else if (table[0] instanceof SQLObject) table[0] = table[0];else table[0] = quoteTerm(table[0]);
           table[1] = quoteTerm(table[1]);
           return table;
         }
 
-        if (table instanceof Select) return ['(' + table.toString() + ')'];
+        if (table instanceof Query) return [new Subquery(table)];
+        if (table instanceof SQLObject) return [table];
         var alias = Object.values(table)[0];
         if (alias instanceof Select) alias = '(' + alias.toString() + ')';else alias = quoteTerm(alias);
         return [alias, quoteTerm(Object.keys(table)[0])];
@@ -924,8 +984,8 @@ var Select = /*#__PURE__*/function (_Query2) {
   }, {
     key: "join",
     value: function join(table, type) {
-      for (var _len10 = arguments.length, conditions = new Array(_len10 > 2 ? _len10 - 2 : 0), _key10 = 2; _key10 < _len10; _key10++) {
-        conditions[_key10 - 2] = arguments[_key10];
+      for (var _len11 = arguments.length, conditions = new Array(_len11 > 2 ? _len11 - 2 : 0), _key11 = 2; _key11 < _len11; _key11++) {
+        conditions[_key11 - 2] = arguments[_key11];
       }
 
       if (typeof table === "string") table = quoteTerm(table);
@@ -991,14 +1051,14 @@ var Select = /*#__PURE__*/function (_Query2) {
   }, {
     key: "groupBy",
     value: function groupBy() {
-      var _this14 = this;
+      var _this16 = this;
 
-      for (var _len11 = arguments.length, aggregateExpressions = new Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
-        aggregateExpressions[_key11] = arguments[_key11];
+      for (var _len12 = arguments.length, aggregateExpressions = new Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
+        aggregateExpressions[_key12] = arguments[_key12];
       }
 
       aggregateExpressions.forEach(function (a) {
-        return _this14.aggregations.push(a);
+        return _this16.aggregations.push(a);
       });
       return this;
     }
@@ -1012,6 +1072,11 @@ var Select = /*#__PURE__*/function (_Query2) {
   }, {
     key: "limit",
     value: function limit(number, offset) {
+      if (!number && !offset) {
+        this.limits = undefined;
+        return this;
+      }
+
       this.limits = {
         number: number,
         offset: offset
@@ -1021,8 +1086,8 @@ var Select = /*#__PURE__*/function (_Query2) {
   }, {
     key: "limitBy",
     value: function limitBy(limit) {
-      for (var _len12 = arguments.length, columns = new Array(_len12 > 1 ? _len12 - 1 : 0), _key12 = 1; _key12 < _len12; _key12++) {
-        columns[_key12 - 1] = arguments[_key12];
+      for (var _len13 = arguments.length, columns = new Array(_len13 > 1 ? _len13 - 1 : 0), _key13 = 1; _key13 < _len13; _key13++) {
+        columns[_key13 - 1] = arguments[_key13];
       }
 
       this.limitbycolumns = {
@@ -1034,8 +1099,8 @@ var Select = /*#__PURE__*/function (_Query2) {
   }, {
     key: "orderBy",
     value: function orderBy() {
-      for (var _len13 = arguments.length, expressions = new Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
-        expressions[_key13] = arguments[_key13];
+      for (var _len14 = arguments.length, expressions = new Array(_len14), _key14 = 0; _key14 < _len14; _key14++) {
+        expressions[_key14] = arguments[_key14];
       }
 
       if (!expressions.length) {
@@ -1049,6 +1114,21 @@ var Select = /*#__PURE__*/function (_Query2) {
     key: "format",
     value: function format(fmt) {
       this.fmt = fmt;
+      return this;
+    }
+  }, {
+    key: "having",
+    value: function having() {
+      if (!arguments.length) {
+        return this.having_conditions;
+      }
+
+      if (arguments.length === 1 && (arguments.length <= 0 ? undefined : arguments[0]) instanceof _Condition3) {
+        this.having_conditions.push(arguments.length <= 0 ? undefined : arguments[0]);
+      } else {
+        this.having_conditions.push(createCondition.apply(void 0, arguments));
+      }
+
       return this;
     }
   }, {
@@ -1106,7 +1186,9 @@ var Select = /*#__PURE__*/function (_Query2) {
 var Queries = {
   Select: Select,
   With: With,
-  WithReference: WithReference
+  WithReference: WithReference,
+  Raw: Raw,
+  UnionAll: UnionAll
 };
 var Utility = {
   quoteVal: quoteVal,
@@ -1117,8 +1199,8 @@ var Utility = {
     return new Raw(s);
   },
   Condition: function Condition() {
-    for (var _len14 = arguments.length, args = new Array(_len14), _key14 = 0; _key14 < _len14; _key14++) {
-      args[_key14] = arguments[_key14];
+    for (var _len15 = arguments.length, args = new Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
+      args[_key15] = arguments[_key15];
     }
 
     return _construct(_Condition3, args);
@@ -1127,15 +1209,15 @@ var Utility = {
 };
 var Shortcuts = {
   And: function And() {
-    for (var _len15 = arguments.length, args = new Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
-      args[_key15] = arguments[_key15];
+    for (var _len16 = arguments.length, args = new Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
+      args[_key16] = arguments[_key16];
     }
 
     return _construct(Conjunction, args);
   },
   Or: function Or() {
-    for (var _len16 = arguments.length, args = new Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
-      args[_key16] = arguments[_key16];
+    for (var _len17 = arguments.length, args = new Array(_len17), _key17 = 0; _key17 < _len17; _key17++) {
+      args[_key17] = arguments[_key17];
     }
 
     return _construct(Disjunction, args);
