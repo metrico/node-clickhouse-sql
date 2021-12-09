@@ -403,7 +403,7 @@ class WithReference extends SQLObject {
   }
   toString() {
     if (this.ref.inline) {
-      return `${this.ref.query.toString()} as ${this.ref.alias}}`;
+      return `(${this.ref.query.toString()}) as ${this.ref.alias}}`;
     }
     return this.ref.alias;
   }
