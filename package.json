@@ -1,23 +1,22 @@
 {
-  "name": "clickhouse-sql",
-  "version": "1.2.3",
-  "description": "Yandex Clickhouse SQL Dialect interface",
+  "name": "@cloki/clickhouse-sql",
+  "version": "1.2.2",
+  "description": "Clickhouse SQL Dialect interface",
   "main": "index.js",
   "jsnext:main": "src/index.js",
   "module": "src/index.js",
   "scripts": {
     "compile": "npx babel ./src/index.js -s -d ./dist/",
     "build": "npm run compile",
-    "launch-docker-image": "docker run --rm -d -p 8123:8123 --name clickhouse-server yandex/clickhouse-server",
-    "stop-docker-image": "docker stop clickhouse-server",
     "test": "nyc mocha --recursive ./test -R spec",
     "report": "nyc report --reporter=lcov > coverage.lcov && codecov",
     "simpletest": "mocha --recursive ./test -R spec",
     "torturetest": "TORTURE=1 mocha -gc --recursive ./test -R spec"
   },
+  "homepage": "https://github.com/metrico/node-clickhouse-sql",
   "repository": {
     "type": "git",
-    "url": "git@github.com:mbIkola/node-clickhouse-sql.git"
+    "url": "git+ssh://git@github.com/metrico/node-clickhouse-sql.git"
   },
   "keywords": [
     "clickhouse",
@@ -36,6 +35,5 @@
     "mocha": "^9.1.3",
     "nyc": "^15.0.1"
   },
-  "author": "Nickolay \"mbIkola\" Kharchevin <kharchevyn@google.com>",
   "license": "SEE LICENSE IN LICENSE"
 }
