@@ -735,7 +735,7 @@ var WithReference = /*#__PURE__*/function (_SQLObject10) {
     key: "toString",
     value: function toString() {
       if (this.ref.inline) {
-        return "".concat(this.ref.query.toString(), " as ").concat(this.ref.alias, "}");
+        return "(".concat(this.ref.query.toString(), ") as ").concat(this.ref.alias, "}");
       }
 
       return this.ref.alias;
