@@ -713,8 +713,12 @@ class Select extends Query {
       : '';
 
 
-    let limit = this.limits
-      ? "limit " + ((typeof this.limits.offset === "undefined") ? this.limits.number : this.limits.offset + ", " + this.limits.number)
+    let limit_number = this.limits && typeof this.limits.number !== "undefined"
+      ? this.limits.number.toString() : undefined;
+    let limit_offset = this.limits && typeof this.limits.offset !== "undefined"
+      ? this.limits.offset.toString() : undefined;
+    let limit = limit_number || limit_offset
+      ? "limit " + ((typeof limit_offset === "undefined") ? limit_number : limit_offset + ", " + limit_number)
       : '';
 
     let format = this.fmt
