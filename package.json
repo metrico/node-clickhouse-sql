@@ -1,5 +1,5 @@
 {
-  "name": "@qryn/clickhouse-sql",
+  "name": "@cloki/clickhouse-sql",
   "version": "1.2.7",
   "description": "Clickhouse SQL Dialect interface",
   "main": "index.js",
