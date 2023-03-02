@@ -29,7 +29,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 function _construct(Parent, args, Class) { if (_isNativeReflectConstruct()) { _construct = Reflect.construct; } else { _construct = function _construct(Parent, args, Class) { var a = [null]; a.push.apply(a, args); var Constructor = Function.bind.apply(Parent, a); var instance = new Constructor(); if (Class) _setPrototypeOf(instance, Class.prototype); return instance; }; } return _construct.apply(null, arguments); }
 
-function _get(target, property, receiver) { if (typeof Reflect !== "undefined" && Reflect.get) { _get = Reflect.get; } else { _get = function _get(target, property, receiver) { var base = _superPropBase(target, property); if (!base) return; var desc = Object.getOwnPropertyDescriptor(base, property); if (desc.get) { return desc.get.call(receiver); } return desc.value; }; } return _get(target, property, receiver || target); }
+function _get() { if (typeof Reflect !== "undefined" && Reflect.get) { _get = Reflect.get; } else { _get = function _get(target, property, receiver) { var base = _superPropBase(target, property); if (!base) return; var desc = Object.getOwnPropertyDescriptor(base, property); if (desc.get) { return desc.get.call(arguments.length < 3 ? target : receiver); } return desc.value; }; } return _get.apply(this, arguments); }
 
 function _superPropBase(object, property) { while (!Object.prototype.hasOwnProperty.call(object, property)) { object = _getPrototypeOf(object); if (object === null) break; } return object; }
 
@@ -1155,7 +1155,7 @@ var Select = /*#__PURE__*/function (_Query3) {
       from = from.length ? "from " + from.join() : "";
       var join = this.joins.map(function (join) {
         var table = Array.isArray(join.table) && join.table.length > 1 ? [quoteTerm(join.table[0]), join.table[1]].join(' as ') : join.table;
-        return (join.type ? join.type + ' ' : '') + 'join ' + table + ' on ' + join.conditions;
+        return (join.type ? join.type + ' ' : '') + 'join ' + table + (join.type === 'array' ? ' ' : ' on ' + join.conditions);
       }).join(' ');
       var prewhere = this.preconditions.length ? "prewhere " + this.preconditions : "";
       var where = this.conditions.length ? "where " + this.conditions : "";
